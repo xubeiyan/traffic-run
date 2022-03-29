@@ -1,0 +1,41 @@
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+}
+
+#score {
+    position: absolute;
+    left: 25%;
+    top: 50%;
+    transform: translate(0, -50%);
+    font-size: x-large;
+    font-weight: bold;
+    color: white;
+}
+
+#control {
+    position: absolute;
+    left: 20px;
+    bottom: 20px;
+    display: flex;
+    gap: 5px;
+    flex-direction: column;
+}
+
+#control > button {
+    width: 5em;
+    height: 2em;
+    font-size: larger;
+    border: none;
+    box-shadow: 2px 2px 0 0 black;
+}
+
+#control > button:active {
+    position: relative;
+    top: 1px;
+    left: 1px;
+    box-shadow: 1px 1px 0 0 black;
+}
