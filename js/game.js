@@ -1,106 +1,13 @@
 import * as THREE from "./three.module.js";
 
-// 车辆颜色
-const vehicleColors = [0xa52523, 0xbdb638, 0x78b14b];
-
-const pickRandom = (arr) => {
-  return arr[Math.floor(Math.random() * arr.length)];
-};
-
-// 车窗(前)纹理
-const getCarFrontTexture = () => {
-  const canvas = document.createElement("canvas");
-  canvas.width = 64;
-  canvas.height = 32;
-  const context = canvas.getContext("2d");
-
-  context.fillStyle = "#ffffff";
-  context.fillRect(0, 0, 64, 32);
-
-  context.fillStyle = "#666666";
-  context.fillRect(8, 8, 48, 24);
-
-  return new THREE.CanvasTexture(canvas);
-};
-
-const getCarSideTexture = () => {
-  const canvas = document.createElement("canvas");
-  canvas.width = 128;
-  canvas.height = 32;
-  const context = canvas.getContext("2d");
-
-  context.fillStyle = "#ffffff";
-  context.fillRect(0, 0, 128, 32);
-
-  context.fillStyle = "#666666";
-  context.fillRect(10, 8, 38, 24);
-  context.fillRect(58, 8, 60, 24);
-
-  return new THREE.CanvasTexture(canvas);
-};
-
-// 车轮
-const Wheel = () => {
-  const wheel = new THREE.Mesh(
-    new THREE.BoxBufferGeometry(12, 33, 12),
-    new THREE.MeshLambertMaterial({ color: 0x333333 })
-  );
-  wheel.position.z = 6;
-  return wheel;
-};
-
-// 车辆
-const Car = () => {
-  const car = new THREE.Group();
-  const backWheel = Wheel();
-  backWheel.position.x = -18;
-  car.add(backWheel);
-
-  const frontWheel = Wheel();
-  frontWheel.position.x = 18;
-  car.add(frontWheel);
-
-  const main = new THREE.Mesh(
-    new THREE.BoxBufferGeometry(60, 30, 15),
-    new THREE.MeshLambertMaterial({ color: pickRandom(vehicleColors) })
-  );
-  main.position.z = 12;
-  car.add(main);
-
-  // 引入车窗纹理
-  const carFrontTexture = getCarFrontTexture();
-  carFrontTexture.center = new THREE.Vector2(0.5, 0.5);
-  carFrontTexture.rotation = Math.PI / 2;
-
-  const carBackTexture = getCarFrontTexture();
-  carBackTexture.center = new THREE.Vector2(0.5, 0.5);
-  carBackTexture.rotation = -Math.PI / 2;
-
-  const carRightSideTexture = getCarSideTexture();
-
-  const carLeftSideTexture = getCarSideTexture();
-  carLeftSideTexture.flipY = false;
-
-  const cabin = new THREE.Mesh(new THREE.BoxBufferGeometry(33, 24, 12), [
-    new THREE.MeshLambertMaterial({ map: carFrontTexture }),
-    new THREE.MeshLambertMaterial({ map: carBackTexture }),
-    new THREE.MeshLambertMaterial({ map: carLeftSideTexture }),
-    new THREE.MeshLambertMaterial({ map: carRightSideTexture }),
-    new THREE.MeshLambertMaterial({ color: 0xffffff }),
-    new THREE.MeshLambertMaterial({ color: 0xffffff }),
-  ]);
-  cabin.position.x = -6;
-  cabin.position.z = 25.5;
-  car.add(cabin);
-
-  return car;
-};
-
-
+// 汽车和卡车
+import { Car } from "./Car.js";
+import { Truck } from "./Truck.js";
 
 // 路
 const trackRadius = 225;
-const realRadius = trackRadius - 20;
+const cwRadius = trackRadius - 20;
+const ccwRadius = trackRadius + 20;
 const trackWidth = 45;
 const innerTrackRadius = trackRadius - trackWidth;
 const outerTrackRadius = trackRadius + trackWidth;
@@ -118,8 +25,6 @@ const arcCenterX =
 
 const arcAngle3 = Math.acos(arcCenterX / innerTrackRadius);
 const arcAngle4 = Math.acos(arcCenterX / outerTrackRadius);
-
-
 
 // 场景
 const scene = new THREE.Scene();
@@ -143,8 +48,8 @@ const movePlayerCar = (timeDelta) => {
 
   const totalPlayerAngle = playerAngleInintial + playerAngleMoved;
 
-  const playerX = Math.cos(totalPlayerAngle) * realRadius - arcCenterX;
-  const playerY = Math.sin(totalPlayerAngle) * realRadius;
+  const playerX = Math.cos(totalPlayerAngle) * cwRadius - arcCenterX;
+  const playerY = Math.sin(totalPlayerAngle) * cwRadius;
 
   playerCar.position.x = playerX;
   playerCar.position.y = playerY;
@@ -367,116 +272,10 @@ const getLineMarkings = (mapWidth, mapHeight) => {
   return new THREE.CanvasTexture(canvas);
 };
 
-// 树
-const treeCrownColor = 0x498c2c;
-const treeTrunkColor = 0x4b3f2f;
+import { addTrees } from "./Tree.js";
+import { pickRandom } from "./tools.js";
 
-const treeTrunkGeometry = new THREE.BoxBufferGeometry(15, 15, 30);
-const treeTrunkMaterial = new THREE.MeshLambertMaterial({
-  color: treeTrunkColor
-});
-const treeCrownMaterial = new THREE.MeshLambertMaterial({
-  color: treeCrownColor
-});
-
-const Tree = () => {
-  const tree = new THREE.Group();
-
-  const trunk = new THREE.Mesh(treeTrunkGeometry, treeTrunkMaterial);
-  trunk.position.z = 10;
-  trunk.castShadow = true;
-  trunk.receiveShadow = true;
-  trunk.matrixAutoUpdate = false;
-  tree.add(trunk);
-
-  const treeHeights = [45, 60, 75];
-  const height = pickRandom(treeHeights);
-
-  const crown = new THREE.Mesh(
-    new THREE.SphereGeometry(height / 2, 30, 30),
-    treeCrownMaterial
-  );
-  crown.position.z = height / 2 + 30;
-  crown.castShadow = true;
-  crown.receiveShadow = false;
-  tree.add(crown);
-
-  return tree;
-};
-
-// 添加树
-const addTrees = () => {
-  const tree1 = Tree();
-  tree1.position.x = arcCenterX * 1.3;
-  scene.add(tree1);
-
-  const tree2 = Tree();
-  tree2.position.y = arcCenterX * 1.9;
-  tree2.position.x = arcCenterX * 1.3;
-  scene.add(tree2);
-
-  const tree3 = Tree();
-  tree3.position.x = arcCenterX * 0.8;
-  tree3.position.y = arcCenterX * 2;
-  scene.add(tree3);
-
-  const tree4 = Tree();
-  tree4.position.x = arcCenterX * 1.8;
-  tree4.position.y = arcCenterX * 2;
-  scene.add(tree4);
-
-  const tree5 = Tree();
-  tree5.position.x = -arcCenterX * 1;
-  tree5.position.y = arcCenterX * 2;
-  scene.add(tree5);
-
-  const tree6 = Tree();
-  tree6.position.x = -arcCenterX * 2;
-  tree6.position.y = arcCenterX * 1.8;
-  scene.add(tree6);
-
-  const tree7 = Tree();
-  tree7.position.x = arcCenterX * 0.8;
-  tree7.position.y = -arcCenterX * 2;
-  scene.add(tree7);
-
-  const tree8 = Tree();
-  tree8.position.x = arcCenterX * 1.8;
-  tree8.position.y = -arcCenterX * 2;
-  scene.add(tree8);
-
-  const tree9 = Tree();
-  tree9.position.x = -arcCenterX * 1;
-  tree9.position.y = -arcCenterX * 2;
-  scene.add(tree9);
-
-  const tree10 = Tree();
-  tree10.position.x = -arcCenterX * 2;
-  tree10.position.y = -arcCenterX * 1.8;
-  scene.add(tree10);
-
-  const tree11 = Tree();
-  tree11.position.x = arcCenterX * 0.6;
-  tree11.position.y = -arcCenterX * 2.3;
-  scene.add(tree11);
-
-  const tree12 = Tree();
-  tree12.position.x = arcCenterX * 1.5;
-  tree12.position.y = -arcCenterX * 2.4;
-  scene.add(tree12);
-
-  const tree13 = Tree();
-  tree13.position.x = -arcCenterX * 0.7;
-  tree13.position.y = -arcCenterX * 2.4;
-  scene.add(tree13);
-
-  const tree14 = Tree();
-  tree14.position.x = -arcCenterX * 1.5;
-  tree14.position.y = -arcCenterX * 1.8;
-  scene.add(tree14);
-};
-
-addTrees();
+addTrees(scene, arcCenterX);
 
 renderMap(cameraWidth, cameraHeight * 2);
 
@@ -489,13 +288,154 @@ renderer.render(scene, camera);
 
 document.body.appendChild(renderer.domElement);
 
-
 // 游戏控制部分
 let ready;
 let score;
 const scoreElement = document.getElementById("score");
 let otherVehicles = [];
 let lastTimestamp;
+
+const getVehicleSpeed = (type) => {
+  if (type == "car") {
+    const minimumSpeed = 1;
+    const maximumSpeed = 2;
+    return minimumSpeed + Math.random() * (maximumSpeed - minimumSpeed);
+  }
+
+  if ((type = "truck")) {
+    const minimumSpeed = 0.6;
+    const maximumSpeed = 1.5;
+    return minimumSpeed + Math.random() * (maximumSpeed - minimumSpeed);
+  }
+};
+
+const addVechicle = () => {
+  const vehicleTypes = ["car", "truck"];
+
+  const type = pickRandom(vehicleTypes);
+  const mesh = type == "car" ? Car() : Truck();
+  scene.add(mesh);
+
+  const clockwise = Math.random() >= 0.5;
+  const angle = clockwise ? Math.PI / 2 : -Math.PI / 2;
+
+  const speed = getVehicleSpeed(type);
+  otherVehicles.push({ mesh, type, clockwise, angle, speed });
+};
+
+const moveOtherVehicles = (timeDelta) => {
+  otherVehicles.forEach((vehicle) => {
+    let radius = 0;
+    if (vehicle.clockwise) {
+      vehicle.angle -= speed * timeDelta * vehicle.speed;
+      radius = cwRadius;
+    } else {
+      vehicle.angle += speed * timeDelta * vehicle.speed;
+      radius = ccwRadius;
+    }
+
+    const vehicleX = Math.cos(vehicle.angle) * radius + arcCenterX;
+    const vehicleY = Math.sin(vehicle.angle) * radius;
+    const rotation =
+      vehicle.angle + (vehicle.clockwise ? -Math.PI / 2 : Math.PI / 2);
+
+    vehicle.mesh.position.x = vehicleX;
+    vehicle.mesh.position.y = vehicleY;
+    vehicle.mesh.rotation.z = rotation;
+  });
+};
+
+const getHitZonePosition = (center, angle, clockwise, distance) => {
+  const directionAngle = angle + clockwise ? -Math.PI / 2 : +Math.PI / 2;
+  return {
+    x: center.x + Math.cos(directionAngle) * distance,
+    y: center.y + Math.sin(directionAngle) * distance,
+  };
+};
+
+const getDistance = (coordinate1, coordinate2) => {
+  return Math.sqrt(
+    (coordinate2.x - coordinate1.x) ** 2 + (coordinate2.y - coordinate1.y) ** 2
+  );
+};
+
+const hitDetection = () => {
+  const playerHitZone1 = getHitZonePosition(
+    playerCar.position,
+    playerAngleInintial + playerAngleMoved,
+    true,
+    15
+  );
+
+  const playerHitZone2 = getHitZonePosition(
+    playerCar.position,
+    playerAngleInintial + playerAngleMoved,
+    true,
+    -15
+  );
+
+  const hit = otherVehicles.some((vehicle) => {
+    if (vehicle.type == "car") {
+      const vehicleHitZone1 = getHitZonePosition(
+        vehicle.mesh.position,
+        vehicle.angle,
+        vehicle.clockwise,
+        15
+      );
+
+      const vehicleHitZone2 = getHitZonePosition(
+        vehicle.mesh.position,
+        vehicle.angle,
+        vehicle.clockwise,
+        -15
+      );
+
+      // 玩家车撞到其他车的头部或尾部
+      if (getDistance(playerHitZone1, vehicleHitZone1) < 40) return true;
+      if (getDistance(playerHitZone1, vehicleHitZone2) < 40) return true;
+
+      // 玩家车被追尾
+      if (getDistance(playerHitZone2, vehicleHitZone1) < 40) return true;
+    }
+
+    if (vehicle.type == "truck") {
+      const vehicleHitZone1 = getHitZonePosition(
+        vehicle.mesh.position,
+        vehicle.angle,
+        vehicle.clockwise,
+        35
+      );
+
+      const vehicleHitZone2 = getHitZonePosition(
+        vehicle.mesh.position,
+        vehicle.angle,
+        vehicle.clockwise,
+        0
+      );
+
+      const vehicleHitZone3 = getHitZonePosition(
+        vehicle.mesh.position,
+        vehicle.angle,
+        vehicle.clockwise,
+        -35
+      );
+
+      // 玩家车撞上了其他车的头中尾
+      if (getDistance(playerHitZone1, vehicleHitZone1) < 40) return true;
+      if (getDistance(playerHitZone1, vehicleHitZone2) < 40) return true;
+      if (getDistance(playerHitZone1, vehicleHitZone3) < 40) return true;
+
+      // 玩家车被追尾
+      if (getDistance(playerHitZone2, vehicleHitZone1) < 40) return true;
+    }
+  });
+
+  // 撞到了就结束游戏
+  if (hit) {
+    renderer.setAnimationLoop(null);
+    endGame();
+  }
+};
 
 const animation = (timestamp) => {
   if (!lastTimestamp) {
@@ -516,9 +456,20 @@ const animation = (timestamp) => {
     scoreElement.textContent = score;
   }
 
+  // 每5圈增加一辆车，达到MAX就不再增加
+  if (otherVehicles.length < (laps + 1) / 5 && otherVehicles.length < 6)
+    addVechicle();
+
+  moveOtherVehicles(timeDelta);
+
+  hitDetection();
+
   renderer.render(scene, camera);
   lastTimestamp = timestamp;
 };
+
+const endTip = document.getElementById("end-tip");
+const restartButton = document.getElementById("restart");
 
 const reset = () => {
   // 重置位置和分数
@@ -536,14 +487,26 @@ const reset = () => {
 
   renderer.render(scene, camera);
   ready = true;
+  // 去掉endgame
+  endTip.classList.add("hide");
 };
+
 reset();
 
 const startGame = () => {
+  
   if (ready) {
     ready = false;
     renderer.setAnimationLoop(animation);
   }
+};
+
+// 结束游戏
+const endGame = () => {
+  endTip.classList.remove("hide");
+  restartButton.addEventListener("click", () => {
+    reset();
+  });
 };
 
 const up = document.getElementById("up");
