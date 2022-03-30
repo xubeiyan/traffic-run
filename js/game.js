@@ -494,7 +494,6 @@ const reset = () => {
 reset();
 
 const startGame = () => {
-  
   if (ready) {
     ready = false;
     renderer.setAnimationLoop(animation);
