@@ -528,6 +528,25 @@ down.addEventListener("mouseup", () => {
   decelerate = false;
 });
 
+up.addEventListener("touchstart", () => {
+  accelerate = true;
+});
+
+down.addEventListener("touchstart", () => {
+  decelerate = true;
+});
+
+up.addEventListener("touchend", () => {
+  accelerate = false;
+});
+
+down.addEventListener("touchend", () => {
+  decelerate = false;
+});
+
+up.addEventListener('contextmenu', (e) => e.preventDefault());
+down.addEventListener('contextmenu', (e) => e.preventDefault());
+
 // 处理按键，由于ArrowKey存在只能绑定keydown
 window.addEventListener("keydown", (e) => {
   if (e.key == "ArrowUp") {

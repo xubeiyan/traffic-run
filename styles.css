@@ -10,7 +10,8 @@ body {
     position: absolute;
     left: 150px;
     bottom: 20px;
-    color: black;
+    color: white;
+    text-shadow: 0 0 10px black;
     font-size: large;
 }
 
@@ -39,6 +40,7 @@ button {
     font-size: larger;
     border: none;
     box-shadow: 2px 2px 0 0 black;
+    user-select: none;
 }
 
 button:active {
@@ -68,7 +70,7 @@ button:active {
 
 #end-tip > div {
     padding: 5em 3em;
-
+    user-select: none;
     z-index: 3;
     color: white;
     font-size: larger;
